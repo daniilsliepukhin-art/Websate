@@ -267,7 +267,7 @@
         </div>
         <p class="record-dialog-copy" id="record-dialog-copy"></p>
         <div class="record-video-frame" id="record-video-frame" hidden>
-          <video class="record-video" id="record-video" controls loop playsinline preload="metadata">
+          <video class="record-video" id="record-video" controls loop playsinline preload="none">
             <source src="record-video.mp4.mp4" type="video/mp4">
           </video>
           <button class="record-video-fullscreen" id="record-video-fullscreen" type="button" aria-label="Assistir em tela cheia" title="Assistir em tela cheia">
@@ -461,11 +461,13 @@
     }
 
     recordVideo.addEventListener('loadeddata', () => {
+      if (!recordDialog.open) return;
       recordVideoFallback.hidden = true;
       recordVideoFrame.hidden = false;
       recordVideo.play().catch(() => {});
     });
     recordVideo.addEventListener('error', () => {
+      if (!recordDialog.open) return;
       recordVideoFrame.hidden = true;
       recordVideoFallback.hidden = false;
     });
@@ -556,6 +558,7 @@
       if (!savePlayerName()) return;
       if (status === 'playing' || status === 'over') resetGame();
       setStatus('playing');
+      document.querySelector('#game-board canvas')?.focus({ preventScroll: true });
     }
 
     function togglePause() {
@@ -601,6 +604,8 @@
       }
 
       create() {
+        this.game.canvas.setAttribute('tabindex', '0');
+        this.game.canvas.setAttribute('aria-label', 'Tabuleiro da cobrinha. Use as teclas WASD ou as setas para jogar.');
         this.graphics = this.add.graphics();
         this.notice = this.add.text(BOARD_SIZE / 2, BOARD_SIZE / 2, '', {
           fontFamily: 'Manrope, sans-serif',
@@ -612,8 +617,15 @@
         }).setOrigin(0.5).setDepth(2);
 
         this.input.keyboard.on('keydown', (event) => {
-          if (recordDialog.open || event.target === nameInput) return;
+          if (recordDialog.open) return;
           const key = event.key.toLowerCase();
+          if (event.target === nameInput) {
+            if (key === 'enter' && (status === 'ready' || status === 'over')) {
+              event.preventDefault();
+              startGame();
+            }
+            return;
+          }
           const directions = {
             arrowup: [0, -1], w: [0, -1],
             arrowdown: [0, 1], s: [0, 1],
