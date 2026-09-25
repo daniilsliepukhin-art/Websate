@@ -124,6 +124,28 @@
     .leaderboard-name { overflow: hidden; font-size: 12px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
     .leaderboard-score { color: var(--muted); font-size: 11px; font-weight: 700; }
     .leaderboard-empty { grid-column: 1 / -1; min-height: 58px; display: flex !important; align-items: center; color: var(--muted); font-size: 12px; }
+    .record-dialog { width: 100vw; height: 100vh; height: 100dvh; max-width: none; max-height: none; overflow: hidden; padding: 0; border: 0; background: #101914; color: #fffefa; }
+    .record-dialog::backdrop { background: #000; }
+    .record-dialog-content { width: min(100%, 1600px); height: 100%; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; margin-inline: auto; padding: clamp(18px, 3vw, 42px); }
+    .record-dialog-top { display: flex; align-items: start; justify-content: space-between; gap: 20px; }
+    .record-dialog .eyebrow { margin-bottom: 11px; color: var(--green); }
+    .record-dialog h2 { margin: 0; font-family: var(--display); font-size: clamp(25px, 5vw, 34px); font-weight: 700; line-height: 1.15; }
+    .record-dialog h2 em { color: var(--green); font-family: Georgia, serif; font-weight: 400; }
+    .record-dialog-copy { margin: 13px 0 20px; color: #c5d0c6; font-size: 13px; line-height: 1.6; }
+    .record-dialog-close { width: 40px; height: 40px; flex: 0 0 auto; display: grid; place-items: center; border: 1px solid #ffffff66; border-radius: 50%; background: transparent; color: #fffefa; font-size: 19px; cursor: pointer; }
+    .record-dialog-close:hover { background: #ffffff18; }
+    .record-video-frame { position: relative; width: 100%; height: 100%; min-height: 0; aspect-ratio: auto; background: #000; }
+    .record-video-frame[hidden] { display: none; }
+    .record-video-frame:fullscreen { width: 100vw; height: 100vh; max-width: none; max-height: none; display: grid; place-items: center; aspect-ratio: auto; background: #000; }
+    .record-video { width: 100%; height: 100%; max-height: none; display: block; background: #000; object-fit: contain; }
+    .record-video-frame:fullscreen .record-video { width: 100%; height: 100%; max-height: none; }
+    .record-video-fullscreen { position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid #ffffff66; border-radius: 3px; background: #101914c9; color: white; cursor: pointer; }
+    .record-video-fullscreen:hover { background: #101914; }
+    .record-video-fullscreen svg { width: 19px; height: 19px; }
+    .record-video-fallback { width: 100%; height: 100%; min-height: 0; display: grid; place-items: center; padding: 25px; background: #17221b; color: #d8e1d9; text-align: center; font-size: 12px; line-height: 1.7; }
+    .record-video-fallback[hidden] { display: none; }
+    .record-dialog-footer { display: flex; justify-content: end; margin-top: 20px; }
+    .record-dialog-footer .action { min-width: 130px; padding-inline: 18px; }
     .page-foot { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-top: 21px; color: var(--quiet); font-size: 9px; }
     .page-foot a { color: #566b38; font-weight: 700; }
     @media (max-width: 800px) {
@@ -155,6 +177,7 @@
       .side-panel > .direction-pad { margin: 17px auto 0; }
       .leaderboard-list { grid-template-columns: 1fr; }
       .leaderboard-heading { align-items: start; flex-direction: column; }
+      .record-dialog-content { padding: 17px; }
       .page-foot { align-items: start; flex-direction: column; }
     }
     @media (prefers-reduced-motion: reduce) {
@@ -230,6 +253,29 @@
       <ol class="leaderboard-list" id="leaderboard-list" aria-live="polite"></ol>
     </section>
 
+    <dialog class="record-dialog" id="record-dialog" aria-labelledby="record-dialog-title" aria-describedby="record-dialog-copy">
+      <div class="record-dialog-content">
+        <div class="record-dialog-top">
+          <div>
+            <p class="eyebrow">NOVO RECORDE NO ARCADE</p>
+            <h2 id="record-dialog-title">Você passou <em>na frente!</em></h2>
+          </div>
+          <button class="record-dialog-close" id="record-dialog-close" type="button" aria-label="Fechar vídeo">×</button>
+        </div>
+        <p class="record-dialog-copy" id="record-dialog-copy"></p>
+        <div class="record-video-frame" id="record-video-frame" hidden>
+          <video class="record-video" id="record-video" controls loop playsinline preload="metadata">
+            <source src="record-video.mp4.mp4" type="video/mp4">
+          </video>
+          <button class="record-video-fullscreen" id="record-video-fullscreen" type="button" aria-label="Assistir em tela cheia" title="Assistir em tela cheia">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 4H4v4m12-4h4v4M4 16v4h4m12-4v4h-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <div class="record-video-fallback" id="record-video-fallback">Não foi possível reproduzir o vídeo. Verifique se <strong>record-video.mp4.mp4</strong> está na mesma pasta desta página.</div>
+        <div class="record-dialog-footer"><button class="action" id="record-dialog-continue" type="button">Continuar</button></div>
+      </div>
+    </dialog>
+
     <div class="page-foot"><span>Seu recorde fica salvo neste dispositivo.</span><a href="index.html">Voltar ao site da Maré&nbsp; →</a></div>
   </main>
 
@@ -250,6 +296,12 @@
     const nameInput = document.querySelector('#player-name');
     const leaderboardElement = document.querySelector('#leaderboard-list');
     const themeToggle = document.querySelector('.theme-toggle');
+    const recordDialog = document.querySelector('#record-dialog');
+    const recordDialogCopy = document.querySelector('#record-dialog-copy');
+    const recordVideo = document.querySelector('#record-video');
+    const recordVideoFrame = document.querySelector('#record-video-frame');
+    const recordVideoFullscreen = document.querySelector('#record-video-fullscreen');
+    const recordVideoFallback = document.querySelector('#record-video-fallback');
 
     function readBestScore() {
       try {
@@ -306,7 +358,7 @@
       };
       statusElement.textContent = labels[status][0];
       messageElement.textContent = labels[status][1];
-      nameInput.disabled = status === 'playing' || status === 'paused';
+        nameInput.disabled = status === 'playing' || status === 'paused';
       startButton.innerHTML = status === 'playing'
         ? '<span aria-hidden="true">↻</span> Nova partida'
         : status === 'paused'
@@ -367,6 +419,10 @@
     function recordScore() {
       if (!playerName || score <= 0) return;
       const normalizedName = playerName.toLocaleLowerCase('pt-BR');
+      const opponentRecord = leaderboard
+        .filter((entry) => entry.name.toLocaleLowerCase('pt-BR') !== normalizedName)
+        .reduce((highest, entry) => Math.max(highest, entry.score), 0);
+      const beatAnotherPlayer = opponentRecord > 0 && score > opponentRecord;
       const previousEntry = leaderboard.find((entry) => entry.name.toLocaleLowerCase('pt-BR') === normalizedName);
       const personalBest = Math.max(score, previousEntry ? previousEntry.score : 0);
       leaderboard = leaderboard.filter((entry) => entry.name.toLocaleLowerCase('pt-BR') !== normalizedName);
@@ -378,7 +434,62 @@
       } catch {
       }
       renderLeaderboard();
+
+      if (beatAnotherPlayer) {
+        recordDialogCopy.textContent = `${playerName}, você fez ${score} pontos e superou o recorde de outro jogador!`;
+        recordVideoFallback.hidden = true;
+        recordVideoFrame.hidden = false;
+        recordDialog.showModal();
+        recordVideo.load();
+        recordDialog.querySelector('#record-dialog-close').focus();
+      }
     }
+
+    function closeRecordDialog() {
+      if (recordDialog.open) recordDialog.close();
+    }
+
+    recordVideo.addEventListener('loadeddata', () => {
+      recordVideoFallback.hidden = true;
+      recordVideoFrame.hidden = false;
+      recordVideo.play().catch(() => {});
+    });
+    recordVideo.addEventListener('error', () => {
+      recordVideoFrame.hidden = true;
+      recordVideoFallback.hidden = false;
+    });
+    recordVideoFullscreen.addEventListener('click', async () => {
+      try {
+        if (document.fullscreenElement === recordVideoFrame) {
+          await document.exitFullscreen();
+        } else if (recordVideoFrame.requestFullscreen) {
+          await recordVideoFrame.requestFullscreen();
+        } else if (recordVideo.webkitEnterFullscreen) {
+          recordVideo.webkitEnterFullscreen();
+        }
+      } catch {
+        recordVideo.controls = true;
+      }
+    });
+    document.addEventListener('fullscreenchange', () => {
+      const isFullscreen = document.fullscreenElement === recordVideoFrame;
+      recordVideoFullscreen.setAttribute('aria-label', isFullscreen ? 'Sair da tela cheia' : 'Assistir em tela cheia');
+      recordVideoFullscreen.title = isFullscreen ? 'Sair da tela cheia' : 'Assistir em tela cheia';
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && document.fullscreenElement === recordVideoFrame) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        document.exitFullscreen();
+      }
+    }, true);
+    recordDialog.addEventListener('close', () => {
+      if (document.fullscreenElement === recordVideoFrame) document.exitFullscreen();
+      recordVideo.pause();
+      recordVideo.currentTime = 0;
+    });
+    document.querySelector('#record-dialog-close').addEventListener('click', closeRecordDialog);
+    document.querySelector('#record-dialog-continue').addEventListener('click', closeRecordDialog);
 
     function setStatus(nextStatus) {
       status = nextStatus;
@@ -468,7 +579,7 @@
         }).setOrigin(0.5).setDepth(2);
 
         this.input.keyboard.on('keydown', (event) => {
-          if (event.target === nameInput) return;
+          if (recordDialog.open || event.target === nameInput) return;
           const key = event.key.toLowerCase();
           const directions = {
             arrowup: [0, -1], w: [0, -1],
