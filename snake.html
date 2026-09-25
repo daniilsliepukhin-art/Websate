@@ -73,20 +73,22 @@
     .intro-copy { max-width: 350px; margin: 0 0 4px; color: var(--muted); font-size: 13px; line-height: 1.75; }
 
     .game-layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(265px, .65fr); align-items: start; gap: 18px; }
-    .game-stage { min-width: 0; padding: 19px; background: var(--board-bg); }
+    .game-stage { min-width: 0; padding: 19px; border-radius: 7px; background: var(--board-bg); box-shadow: 0 18px 48px rgba(16, 25, 20, .13); }
     .stage-bar { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 15px; color: #dfe8d1; }
     .stage-name { display: flex; align-items: center; gap: 9px; font-size: 11px; font-weight: 700; }
     .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px #c9ed7220; }
     .scores { display: flex; align-items: center; gap: 19px; color: #a5b1a8; font-size: 9px; font-weight: 700; letter-spacing: .5px; }
     .scores strong { margin-left: 5px; color: #fffefa; font-family: var(--display); font-size: 14px; letter-spacing: 0; }
-    .board { width: 100%; aspect-ratio: 1; overflow: hidden; background: #192823; touch-action: none; }
+    .board { width: 100%; aspect-ratio: 1; overflow: hidden; border-radius: 4px; background: #192823; touch-action: none; }
     .board canvas { width: 100% !important; height: 100% !important; display: block; }
     .stage-footer { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding-top: 14px; color: #9ba89e; font-size: 10px; }
     .stage-footer span:first-child { color: #dfe8d1; font-weight: 600; }
 
-    .side-panel { padding: 27px; border: 1px solid var(--line); background: var(--surface); }
+    .side-panel { padding: 27px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); box-shadow: 0 12px 34px rgba(20, 28, 23, .05); }
     .status-line { display: flex; align-items: center; gap: 9px; margin-bottom: 20px; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; }
     .status-line::before { width: 8px; height: 8px; border-radius: 50%; background: #a8c75a; content: ''; }
+    .status-line[data-state="playing"]::before { animation: status-pulse 1.4s ease-in-out infinite; }
+    @keyframes status-pulse { 50% { opacity: .6; box-shadow: 0 0 0 6px #a8c75a20; } }
     .side-panel h2 { margin: 0 0 10px; font-family: var(--display); font-size: 21px; font-weight: 700; }
     .game-message { min-height: 43px; margin: 0 0 21px; color: var(--muted); font-size: 12px; line-height: 1.65; }
     .player-field { margin-bottom: 17px; }
@@ -96,7 +98,7 @@
     .player-field input:disabled { opacity: .72; }
     .player-hint { margin: 7px 0 0; color: var(--quiet); font-size: 9px; line-height: 1.5; }
     .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .action { min-height: 43px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 3px; background: var(--green); color: var(--button-text); font-size: 11px; font-weight: 700; cursor: pointer; transition: background .2s, transform .2s; }
+    .action { min-height: 43px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 4px; background: var(--green); color: var(--button-text); font-size: 11px; font-weight: 700; cursor: pointer; transition: background .2s, transform .2s; }
     .action:hover { transform: translateY(-1px); background: #b9df60; }
     .action-secondary { border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
     .action-secondary:hover { background: var(--control-surface); }
@@ -105,7 +107,7 @@
     .keyboard-hint { margin: 0 0 18px; color: var(--muted); font-size: 11px; line-height: 1.7; }
     kbd { padding: 2px 5px; border: 1px solid var(--line); border-radius: 2px; background: var(--control-surface); color: var(--ink); font-family: var(--sans); font-size: 9px; }
     .direction-pad { display: grid; grid-template-columns: repeat(3, 39px); grid-template-rows: repeat(2, 37px); justify-content: center; gap: 5px; }
-    .direction-pad button { display: grid; place-items: center; border: 1px solid var(--line); border-radius: 3px; background: var(--control-surface); color: var(--ink); font-size: 15px; cursor: pointer; touch-action: manipulation; }
+    .direction-pad button { display: grid; place-items: center; border: 1px solid var(--line); border-radius: 4px; background: var(--control-surface); color: var(--ink); font-size: 15px; cursor: pointer; touch-action: manipulation; transition: background .15s, transform .15s; }
     .direction-pad button:hover, .direction-pad button:focus-visible { outline: 2px solid #b9df60; outline-offset: 1px; background: var(--green); }
     .direction-pad [data-dir="up"] { grid-column: 2; grid-row: 1; }
     .direction-pad [data-dir="left"] { grid-column: 1; grid-row: 2; }
@@ -126,25 +128,26 @@
     .leaderboard-empty { grid-column: 1 / -1; min-height: 58px; display: flex !important; align-items: center; color: var(--muted); font-size: 12px; }
     .record-dialog { width: 100vw; height: 100vh; height: 100dvh; max-width: none; max-height: none; overflow: hidden; padding: 0; border: 0; background: #101914; color: #fffefa; }
     .record-dialog::backdrop { background: #000; }
-    .record-dialog-content { width: min(100%, 1600px); height: 100%; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; margin-inline: auto; padding: clamp(18px, 3vw, 42px); }
-    .record-dialog-top { display: flex; align-items: start; justify-content: space-between; gap: 20px; }
+    .record-dialog-content { position: relative; width: 100%; height: 100%; overflow: hidden; margin-inline: auto; padding: 0; }
+    .record-dialog-top { position: absolute; z-index: 3; top: clamp(18px, 3vw, 42px); right: clamp(18px, 3vw, 42px); left: clamp(18px, 3vw, 42px); display: flex; align-items: start; justify-content: space-between; gap: 20px; pointer-events: none; }
+    .record-dialog-top > * { pointer-events: auto; }
     .record-dialog .eyebrow { margin-bottom: 11px; color: var(--green); }
     .record-dialog h2 { margin: 0; font-family: var(--display); font-size: clamp(25px, 5vw, 34px); font-weight: 700; line-height: 1.15; }
     .record-dialog h2 em { color: var(--green); font-family: Georgia, serif; font-weight: 400; }
-    .record-dialog-copy { margin: 13px 0 20px; color: #c5d0c6; font-size: 13px; line-height: 1.6; }
+    .record-dialog-copy { position: absolute; z-index: 3; top: clamp(105px, 14vh, 150px); left: clamp(18px, 3vw, 42px); max-width: min(620px, calc(100% - 36px)); margin: 0; padding: 10px 14px; border-radius: 4px; background: rgba(16, 25, 20, .78); color: #e1e9df; font-size: 13px; line-height: 1.6; }
     .record-dialog-close { width: 40px; height: 40px; flex: 0 0 auto; display: grid; place-items: center; border: 1px solid #ffffff66; border-radius: 50%; background: transparent; color: #fffefa; font-size: 19px; cursor: pointer; }
     .record-dialog-close:hover { background: #ffffff18; }
-    .record-video-frame { position: relative; width: 100%; height: 100%; min-height: 0; aspect-ratio: auto; background: #000; }
+    .record-video-frame { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; aspect-ratio: auto; background: #000; }
     .record-video-frame[hidden] { display: none; }
     .record-video-frame:fullscreen { width: 100vw; height: 100vh; max-width: none; max-height: none; display: grid; place-items: center; aspect-ratio: auto; background: #000; }
     .record-video { width: 100%; height: 100%; max-height: none; display: block; background: #000; object-fit: contain; }
     .record-video-frame:fullscreen .record-video { width: 100%; height: 100%; max-height: none; }
-    .record-video-fullscreen { position: absolute; top: 10px; right: 10px; width: 40px; height: 40px; display: grid; place-items: center; border: 1px solid #ffffff66; border-radius: 3px; background: #101914c9; color: white; cursor: pointer; }
-    .record-video-fullscreen:hover { background: #101914; }
+    .record-video-fullscreen { position: absolute; bottom: clamp(68px, 10vh, 100px); left: clamp(18px, 3vw, 42px); min-height: 42px; display: inline-flex; align-items: center; justify-content: center; gap: 9px; padding: 0 14px; border: 1px solid #ffffff75; border-radius: 4px; background: #101914d9; color: white; font-size: 11px; font-weight: 700; cursor: pointer; }
+    .record-video-fullscreen:hover { background: #26352c; }
     .record-video-fullscreen svg { width: 19px; height: 19px; }
-    .record-video-fallback { width: 100%; height: 100%; min-height: 0; display: grid; place-items: center; padding: 25px; background: #17221b; color: #d8e1d9; text-align: center; font-size: 12px; line-height: 1.7; }
+    .record-video-fallback { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; min-height: 0; display: grid; place-items: center; padding: 25px; background: #17221b; color: #d8e1d9; text-align: center; font-size: 12px; line-height: 1.7; }
     .record-video-fallback[hidden] { display: none; }
-    .record-dialog-footer { display: flex; justify-content: end; margin-top: 20px; }
+    .record-dialog-footer { position: absolute; z-index: 3; right: clamp(18px, 3vw, 42px); bottom: 18px; display: flex; justify-content: end; margin: 0; }
     .record-dialog-footer .action { min-width: 130px; padding-inline: 18px; }
     .page-foot { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-top: 21px; color: var(--quiet); font-size: 9px; }
     .page-foot a { color: #566b38; font-weight: 700; }
@@ -177,7 +180,7 @@
       .side-panel > .direction-pad { margin: 17px auto 0; }
       .leaderboard-list { grid-template-columns: 1fr; }
       .leaderboard-heading { align-items: start; flex-direction: column; }
-      .record-dialog-content { padding: 17px; }
+      .record-dialog-content { padding: 0; }
       .page-foot { align-items: start; flex-direction: column; }
     }
     @media (prefers-reduced-motion: reduce) {
@@ -269,6 +272,7 @@
           </video>
           <button class="record-video-fullscreen" id="record-video-fullscreen" type="button" aria-label="Assistir em tela cheia" title="Assistir em tela cheia">
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 4H4v4m12-4h4v4M4 16v4h4m12-4v4h-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="fullscreen-label">Tela cheia</span>
           </button>
         </div>
         <div class="record-video-fallback" id="record-video-fallback">Não foi possível reproduzir o vídeo. Verifique se <strong>record-video.mp4.mp4</strong> está na mesma pasta desta página.</div>
@@ -301,6 +305,7 @@
     const recordVideo = document.querySelector('#record-video');
     const recordVideoFrame = document.querySelector('#record-video-frame');
     const recordVideoFullscreen = document.querySelector('#record-video-fullscreen');
+    const fullscreenLabel = recordVideoFullscreen.querySelector('.fullscreen-label');
     const recordVideoFallback = document.querySelector('#record-video-fallback');
 
     function readBestScore() {
@@ -341,11 +346,16 @@
     let direction = { x: 1, y: 0 };
     let nextDirection = { x: 1, y: 0 };
     let snake = [{ x: 9, y: 10 }, { x: 8, y: 10 }, { x: 7, y: 10 }];
+    let previousSnake = snake.map((part) => ({ ...part }));
     let food = { x: 14, y: 10 };
     let moveTimer = 0;
     let swipeStart = null;
     nameInput.value = playerName;
     bestElement.textContent = String(bestScore);
+
+    function getStepDuration() {
+      return Math.max(82, 142 - Math.floor(score / 40) * 5);
+    }
 
     function updateInterface() {
       scoreElement.textContent = String(score);
@@ -357,6 +367,7 @@
         over: ['Fim de jogo', `Você fez ${score} pontos. Mais uma partida?`]
       };
       statusElement.textContent = labels[status][0];
+      statusElement.dataset.state = status;
       messageElement.textContent = labels[status][1];
         nameInput.disabled = status === 'playing' || status === 'paused';
       startButton.innerHTML = status === 'playing'
@@ -458,33 +469,53 @@
       recordVideoFrame.hidden = true;
       recordVideoFallback.hidden = false;
     });
+    function isVideoFullscreen() {
+      return document.fullscreenElement === recordVideoFrame
+        || document.fullscreenElement === recordVideo
+        || Boolean(recordVideo.webkitDisplayingFullscreen);
+    }
+
+    function updateVideoFullscreenControl() {
+      const isFullscreen = isVideoFullscreen();
+      const label = isFullscreen ? 'Sair da tela cheia' : 'Assistir em tela cheia';
+      recordVideoFullscreen.setAttribute('aria-label', label);
+      recordVideoFullscreen.title = label;
+      fullscreenLabel.textContent = isFullscreen ? 'Sair da tela cheia' : 'Tela cheia';
+    }
+
     recordVideoFullscreen.addEventListener('click', async () => {
       try {
-        if (document.fullscreenElement === recordVideoFrame) {
-          await document.exitFullscreen();
+        if (isVideoFullscreen()) {
+          if (document.exitFullscreen) await document.exitFullscreen();
+          else if (recordVideo.webkitExitFullscreen) recordVideo.webkitExitFullscreen();
         } else if (recordVideoFrame.requestFullscreen) {
           await recordVideoFrame.requestFullscreen();
+        } else if (recordVideo.requestFullscreen) {
+          await recordVideo.requestFullscreen();
         } else if (recordVideo.webkitEnterFullscreen) {
           recordVideo.webkitEnterFullscreen();
+        } else {
+          throw new Error('Fullscreen is not supported');
         }
       } catch {
         recordVideo.controls = true;
+        recordDialogCopy.textContent += ' Use o botão de tela cheia nos controles do vídeo.';
       }
+      updateVideoFullscreenControl();
     });
     document.addEventListener('fullscreenchange', () => {
-      const isFullscreen = document.fullscreenElement === recordVideoFrame;
-      recordVideoFullscreen.setAttribute('aria-label', isFullscreen ? 'Sair da tela cheia' : 'Assistir em tela cheia');
-      recordVideoFullscreen.title = isFullscreen ? 'Sair da tela cheia' : 'Assistir em tela cheia';
+      updateVideoFullscreenControl();
     });
     document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' && document.fullscreenElement === recordVideoFrame) {
+      if (event.key === 'Escape' && isVideoFullscreen()) {
         event.preventDefault();
         event.stopImmediatePropagation();
         document.exitFullscreen();
       }
     }, true);
     recordDialog.addEventListener('close', () => {
-      if (document.fullscreenElement === recordVideoFrame) document.exitFullscreen();
+      if (isVideoFullscreen() && document.exitFullscreen) document.exitFullscreen();
+      else if (recordVideo.webkitDisplayingFullscreen && recordVideo.webkitExitFullscreen) recordVideo.webkitExitFullscreen();
       recordVideo.pause();
       recordVideo.currentTime = 0;
     });
@@ -515,6 +546,7 @@
       direction = { x: 1, y: 0 };
       nextDirection = { x: 1, y: 0 };
       snake = [{ x: 9, y: 10 }, { x: 8, y: 10 }, { x: 7, y: 10 }];
+      previousSnake = snake.map((part) => ({ ...part }));
       moveTimer = 0;
       placeFood();
       setStatus('ready');
@@ -545,6 +577,7 @@
         return;
       }
 
+      previousSnake = snake.map((part) => ({ ...part }));
       snake.unshift(head);
       if (ateFood) {
         score += 10;
@@ -615,7 +648,7 @@
       update(time, delta) {
         if (status === 'playing') {
           moveTimer += delta;
-          const stepDuration = Math.max(82, 142 - Math.floor(score / 40) * 5);
+          const stepDuration = getStepDuration();
           while (moveTimer >= stepDuration && status === 'playing') {
             moveTimer -= stepDuration;
             advanceSnake();
@@ -645,12 +678,30 @@
         graphics.fillStyle(0xf27850, 1);
         graphics.fillCircle(foodCenterX, foodCenterY, 6.5 * pulse);
 
+        const stepProgress = status === 'over' ? 1 : Math.min(moveTimer / getStepDuration(), 1);
         snake.forEach((part, index) => {
           const inset = index === 0 ? 3 : 4;
-          const x = part.x * CELL_SIZE + inset;
-          const y = part.y * CELL_SIZE + inset;
+          const previousPart = index === 0
+            ? previousSnake[0]
+            : previousSnake[Math.min(index - 1, previousSnake.length - 1)];
+          const visualX = previousPart.x + (part.x - previousPart.x) * stepProgress;
+          const visualY = previousPart.y + (part.y - previousPart.y) * stepProgress;
+          const x = visualX * CELL_SIZE + inset;
+          const y = visualY * CELL_SIZE + inset;
           graphics.fillStyle(index === 0 ? 0xefffae : 0xc9ed72, 1);
           graphics.fillRoundedRect(x, y, CELL_SIZE - inset * 2, CELL_SIZE - inset * 2, index === 0 ? 8 : 5);
+
+          if (index === 0) {
+            const centerX = x + (CELL_SIZE - inset * 2) / 2;
+            const centerY = y + (CELL_SIZE - inset * 2) / 2;
+            const forwardX = direction.x * 6;
+            const forwardY = direction.y * 6;
+            const sideX = -direction.y * 5;
+            const sideY = direction.x * 5;
+            graphics.fillStyle(0x192823, 1);
+            graphics.fillCircle(centerX + forwardX + sideX, centerY + forwardY + sideY, 2);
+            graphics.fillCircle(centerX + forwardX - sideX, centerY + forwardY - sideY, 2);
+          }
         });
 
         const notices = {
