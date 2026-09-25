@@ -1,0 +1,606 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#192823">
+  <meta name="description" content="Faça uma pausa e jogue a cobrinha da Maré.">
+  <title>Arcade da Maré — Cobrinha</title>
+  <script>
+    try {
+      if (localStorage.getItem('mare-theme') === 'dark') document.documentElement.dataset.theme = 'dark';
+    } catch {
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f5f4ed;
+      --ink: #192823;
+      --muted: #68746d;
+      --green: #c9ed72;
+      --orange: #f27850;
+      --line: #dfe2d8;
+      --surface: #fffefa;
+      --control-surface: #f7f7f1;
+      --eyebrow-color: #68746d;
+      --quiet: #879189;
+      --button-text: #192823;
+      --board-bg: #192823;
+      --sans: 'DM Sans', sans-serif;
+      --display: 'Manrope', sans-serif;
+    }
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --paper: #141c17;
+      --ink: #edf2e9;
+      --muted: #b1bcb2;
+      --line: #35443a;
+      --surface: #202b24;
+      --control-surface: #26332a;
+      --eyebrow-color: #b2beb4;
+      --quiet: #a0aca3;
+    }
+
+    * { box-sizing: border-box; }
+    body { min-width: 320px; min-height: 100vh; margin: 0; background: var(--paper); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+    a { color: inherit; text-decoration: none; }
+    button { font: inherit; }
+    .wrap { width: min(1160px, calc(100% - 56px)); margin-inline: auto; }
+
+    .topbar { height: 78px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
+    .brand { display: inline-flex; align-items: center; gap: 10px; font-family: var(--display); font-size: 22px; font-weight: 800; }
+    .brand-mark { width: 29px; height: 29px; display: grid; place-items: center; border-radius: 50%; background: var(--green); font-family: Georgia, serif; font-size: 19px; font-style: italic; }
+    .header-actions { display: flex; align-items: center; gap: 19px; }
+    .theme-toggle { width: 38px; height: 38px; display: grid; flex: 0 0 auto; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: transparent; color: var(--ink); cursor: pointer; transition: background .2s; }
+    .theme-toggle:hover { background: var(--surface); }
+    .theme-toggle svg { width: 17px; height: 17px; }
+    .theme-toggle .sun-icon { display: none; }
+    :root[data-theme="dark"] .theme-toggle .moon-icon { display: none; }
+    :root[data-theme="dark"] .theme-toggle .sun-icon { display: block; }
+    .back-link { display: inline-flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12px; font-weight: 700; }
+    .back-link span { font-size: 17px; transition: transform .2s; }
+    .back-link:hover span { transform: translateX(-3px); }
+    main { padding-block: 48px 75px; }
+    .intro { display: flex; align-items: end; justify-content: space-between; gap: 35px; margin-bottom: 31px; }
+    .eyebrow { display: flex; align-items: center; gap: 9px; margin: 0 0 15px; color: var(--eyebrow-color); font-size: 10px; font-weight: 700; letter-spacing: 1.2px; }
+    .eyebrow::before { width: 19px; height: 2px; background: var(--orange); content: ''; }
+    h1 { margin: 0; font-family: var(--display); font-size: clamp(34px, 5vw, 56px); font-weight: 600; line-height: 1.08; }
+    h1 em { color: #789b39; font-family: Georgia, serif; font-weight: 400; }
+    .intro-copy { max-width: 350px; margin: 0 0 4px; color: var(--muted); font-size: 13px; line-height: 1.75; }
+
+    .game-layout { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(265px, .65fr); align-items: start; gap: 18px; }
+    .game-stage { min-width: 0; padding: 19px; background: var(--board-bg); }
+    .stage-bar { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 15px; color: #dfe8d1; }
+    .stage-name { display: flex; align-items: center; gap: 9px; font-size: 11px; font-weight: 700; }
+    .live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 4px #c9ed7220; }
+    .scores { display: flex; align-items: center; gap: 19px; color: #a5b1a8; font-size: 9px; font-weight: 700; letter-spacing: .5px; }
+    .scores strong { margin-left: 5px; color: #fffefa; font-family: var(--display); font-size: 14px; letter-spacing: 0; }
+    .board { width: 100%; aspect-ratio: 1; overflow: hidden; background: #192823; touch-action: none; }
+    .board canvas { width: 100% !important; height: 100% !important; display: block; }
+    .stage-footer { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding-top: 14px; color: #9ba89e; font-size: 10px; }
+    .stage-footer span:first-child { color: #dfe8d1; font-weight: 600; }
+
+    .side-panel { padding: 27px; border: 1px solid var(--line); background: var(--surface); }
+    .status-line { display: flex; align-items: center; gap: 9px; margin-bottom: 20px; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; }
+    .status-line::before { width: 8px; height: 8px; border-radius: 50%; background: #a8c75a; content: ''; }
+    .side-panel h2 { margin: 0 0 10px; font-family: var(--display); font-size: 21px; font-weight: 700; }
+    .game-message { min-height: 43px; margin: 0 0 21px; color: var(--muted); font-size: 12px; line-height: 1.65; }
+    .player-field { margin-bottom: 17px; }
+    .player-field label { display: block; margin-bottom: 7px; color: var(--muted); font-size: 10px; font-weight: 700; }
+    .player-field input { width: 100%; height: 43px; padding: 0 11px; border: 1px solid var(--line); border-radius: 3px; outline: 0; background: var(--control-surface); color: var(--ink); font-size: 12px; }
+    .player-field input:focus { border-color: #91b64b; }
+    .player-field input:disabled { opacity: .72; }
+    .player-hint { margin: 7px 0 0; color: var(--quiet); font-size: 9px; line-height: 1.5; }
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .action { min-height: 43px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; border: 0; border-radius: 3px; background: var(--green); color: var(--button-text); font-size: 11px; font-weight: 700; cursor: pointer; transition: background .2s, transform .2s; }
+    .action:hover { transform: translateY(-1px); background: #b9df60; }
+    .action-secondary { border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+    .action-secondary:hover { background: var(--control-surface); }
+    .divider { height: 1px; margin-block: 22px; background: var(--line); }
+    .controls-title { margin: 0 0 12px; color: var(--muted); font-size: 10px; font-weight: 700; letter-spacing: .7px; text-transform: uppercase; }
+    .keyboard-hint { margin: 0 0 18px; color: var(--muted); font-size: 11px; line-height: 1.7; }
+    kbd { padding: 2px 5px; border: 1px solid var(--line); border-radius: 2px; background: var(--control-surface); color: var(--ink); font-family: var(--sans); font-size: 9px; }
+    .direction-pad { display: grid; grid-template-columns: repeat(3, 39px); grid-template-rows: repeat(2, 37px); justify-content: center; gap: 5px; }
+    .direction-pad button { display: grid; place-items: center; border: 1px solid var(--line); border-radius: 3px; background: var(--control-surface); color: var(--ink); font-size: 15px; cursor: pointer; touch-action: manipulation; }
+    .direction-pad button:hover, .direction-pad button:focus-visible { outline: 2px solid #b9df60; outline-offset: 1px; background: var(--green); }
+    .direction-pad [data-dir="up"] { grid-column: 2; grid-row: 1; }
+    .direction-pad [data-dir="left"] { grid-column: 1; grid-row: 2; }
+    .direction-pad [data-dir="down"] { grid-column: 2; grid-row: 2; }
+    .direction-pad [data-dir="right"] { grid-column: 3; grid-row: 2; }
+    .pause-hint { margin: 20px 0 0; color: var(--quiet); font-size: 10px; line-height: 1.6; }
+
+    .leaderboard { margin-top: 55px; padding-top: 27px; border-top: 1px solid var(--line); }
+    .leaderboard-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 18px; }
+    .leaderboard-heading .eyebrow { margin-bottom: 9px; }
+    .leaderboard-heading h2 { margin: 0; font-family: var(--display); font-size: 24px; font-weight: 700; }
+    .leaderboard-scope { color: var(--muted); font-size: 10px; }
+    .leaderboard-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 42px; margin: 0; padding: 0; list-style: none; }
+    .leaderboard-list li { min-width: 0; min-height: 51px; display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; align-items: center; gap: 8px; border-bottom: 1px solid var(--line); }
+    .leaderboard-rank { color: var(--quiet); font-family: var(--display); font-size: 11px; font-weight: 700; }
+    .leaderboard-name { overflow: hidden; font-size: 12px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+    .leaderboard-score { color: var(--muted); font-size: 11px; font-weight: 700; }
+    .leaderboard-empty { grid-column: 1 / -1; min-height: 58px; display: flex !important; align-items: center; color: var(--muted); font-size: 12px; }
+    .page-foot { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-top: 21px; color: var(--quiet); font-size: 9px; }
+    .page-foot a { color: #566b38; font-weight: 700; }
+    @media (max-width: 800px) {
+      .wrap { width: min(100% - 40px, 620px); }
+      .intro { display: block; }
+      .intro-copy { margin-top: 14px; }
+      .game-layout { grid-template-columns: 1fr; }
+      .side-panel { display: block; }
+    }
+    @media (max-width: 520px) {
+      .wrap { width: calc(100% - 28px); }
+      .topbar { height: 68px; }
+      .brand { font-size: 19px; }
+      .brand-mark { width: 26px; height: 26px; }
+      .back-link { font-size: 10px; }
+      main { padding-block: 37px 48px; }
+      h1 { font-size: 37px; }
+      .game-stage { padding: 10px; }
+      .stage-bar { margin-bottom: 10px; }
+      .scores { gap: 10px; font-size: 8px; }
+      .scores strong { font-size: 12px; }
+      .stage-footer { font-size: 9px; }
+      .side-panel { display: block; padding: 21px; }
+      .side-panel > .status-line { margin-bottom: 15px; }
+      .side-panel > h2 { margin-bottom: 10px; }
+      .side-panel > .game-message { margin-bottom: 18px; }
+      .side-panel > .actions { max-width: none; }
+      .side-panel > .divider { margin-block: 19px; }
+      .side-panel > .direction-pad { margin: 17px auto 0; }
+      .leaderboard-list { grid-template-columns: 1fr; }
+      .leaderboard-heading { align-items: start; flex-direction: column; }
+      .page-foot { align-items: start; flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="wrap topbar">
+    <a class="brand" href="index.html" aria-label="Voltar para a Maré"><span class="brand-mark">m</span>maré</a>
+    <div class="header-actions">
+      <button class="theme-toggle" type="button" aria-label="Ativar tema escuro" aria-pressed="false" title="Alternar tema">
+        <svg class="moon-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.2 15.1A8.4 8.4 0 0 1 8.9 3.8 8.5 8.5 0 1 0 20.2 15.1Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg class="sun-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.7"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      </button>
+      <a class="back-link" href="index.html"><span aria-hidden="true">←</span> Voltar para a Maré</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="intro">
+      <div>
+        <p class="eyebrow">ARCADE DA MARÉ · UMA PAUSA NO SEU RITMO</p>
+        <h1>Hoje a cobrinha <em>é sua.</em></h1>
+      </div>
+      <p class="intro-copy">Pegue as frutinhas, cresça sem se enrolar e veja até onde você chega. Pronto para uma partida rápida?</p>
+    </section>
+
+    <section class="game-layout" aria-label="Jogo da cobrinha">
+      <div class="game-stage">
+        <div class="stage-bar">
+          <div class="stage-name"><span class="live-dot" aria-hidden="true"></span>Partida livre</div>
+          <div class="scores"><span>PONTOS <strong id="score">0</strong></span><span>RECORDE <strong id="best-score">0</strong></span></div>
+        </div>
+        <div class="board" id="game-board" aria-label="Tabuleiro da cobrinha"></div>
+        <div class="stage-footer"><span>ARCADE DA MARÉ</span><span>Uma partida de cada vez.</span></div>
+      </div>
+
+      <aside class="side-panel">
+        <p class="status-line" id="game-status">Pronto para jogar</p>
+        <h2>Uma pausa de um minuto.</h2>
+        <p class="game-message" id="game-message" role="status">Informe seu nome, pegue as frutinhas e tente não bater na própria cauda.</p>
+        <div class="player-field">
+          <label for="player-name">Seu nome no placar</label>
+          <input id="player-name" type="text" maxlength="16" placeholder="Ex.: Marina" autocomplete="nickname" required>
+          <p class="player-hint">Seu nome e sua pontuação ficam salvos neste dispositivo.</p>
+        </div>
+        <div class="actions">
+          <button class="action" id="start-game" type="button"><span aria-hidden="true">▶</span> Começar partida</button>
+          <button class="action action-secondary" id="pause-game" type="button"><span aria-hidden="true">Ⅱ</span> Pausar</button>
+        </div>
+        <div class="divider"></div>
+        <p class="controls-title">Como jogar</p>
+        <p class="keyboard-hint">Use <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd> ou <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> para mudar de direção.</p>
+        <div class="direction-pad" aria-label="Controles direcionais">
+          <button type="button" data-dir="up" aria-label="Mover para cima">↑</button>
+          <button type="button" data-dir="left" aria-label="Mover para a esquerda">←</button>
+          <button type="button" data-dir="down" aria-label="Mover para baixo">↓</button>
+          <button type="button" data-dir="right" aria-label="Mover para a direita">→</button>
+        </div>
+        <p class="pause-hint">Pressione <kbd>Espaço</kbd> para pausar ou continuar. No celular, deslize pelo tabuleiro ou use as setas.</p>
+      </aside>
+    </section>
+
+    <section class="leaderboard" aria-labelledby="leaderboard-title">
+      <div class="leaderboard-heading">
+        <div>
+          <p class="eyebrow">QUEM CHEGOU MAIS LONGE?</p>
+          <h2 id="leaderboard-title">Top 10 jogadores</h2>
+        </div>
+        <span class="leaderboard-scope">Placar deste dispositivo</span>
+      </div>
+      <ol class="leaderboard-list" id="leaderboard-list" aria-live="polite"></ol>
+    </section>
+
+    <div class="page-foot"><span>Seu recorde fica salvo neste dispositivo.</span><a href="index.html">Voltar ao site da Maré&nbsp; →</a></div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.90.0/dist/phaser.min.js"></script>
+  <script>
+    const GRID_SIZE = 20;
+    const CELL_SIZE = 30;
+    const BOARD_SIZE = GRID_SIZE * CELL_SIZE;
+    const BEST_KEY = 'mare-snake-best';
+    const PLAYER_NAME_KEY = 'mare-snake-player-name';
+    const LEADERBOARD_KEY = 'mare-snake-leaderboard';
+    const scoreElement = document.querySelector('#score');
+    const bestElement = document.querySelector('#best-score');
+    const statusElement = document.querySelector('#game-status');
+    const messageElement = document.querySelector('#game-message');
+    const startButton = document.querySelector('#start-game');
+    const pauseButton = document.querySelector('#pause-game');
+    const nameInput = document.querySelector('#player-name');
+    const leaderboardElement = document.querySelector('#leaderboard-list');
+    const themeToggle = document.querySelector('.theme-toggle');
+
+    function readBestScore() {
+      try {
+        return Number(localStorage.getItem(BEST_KEY)) || 0;
+      } catch {
+        return 0;
+      }
+    }
+
+    function readPlayerName() {
+      try {
+        return localStorage.getItem(PLAYER_NAME_KEY) || '';
+      } catch {
+        return '';
+      }
+    }
+
+    function readLeaderboard() {
+      try {
+        const entries = JSON.parse(localStorage.getItem(LEADERBOARD_KEY) || '[]');
+        if (!Array.isArray(entries)) return [];
+        return entries
+          .filter((entry) => entry && typeof entry.name === 'string' && Number.isFinite(Number(entry.score)) && Number(entry.score) > 0)
+          .map((entry) => ({ name: entry.name.trim().slice(0, 16), score: Number(entry.score) }))
+          .sort((first, second) => second.score - first.score)
+          .slice(0, 10);
+      } catch {
+        return [];
+      }
+    }
+
+    let bestScore = readBestScore();
+    let leaderboard = readLeaderboard();
+    let playerName = readPlayerName();
+    let score = 0;
+    let status = 'ready';
+    let direction = { x: 1, y: 0 };
+    let nextDirection = { x: 1, y: 0 };
+    let snake = [{ x: 9, y: 10 }, { x: 8, y: 10 }, { x: 7, y: 10 }];
+    let food = { x: 14, y: 10 };
+    let moveTimer = 0;
+    let swipeStart = null;
+    nameInput.value = playerName;
+    bestElement.textContent = String(bestScore);
+
+    function updateInterface() {
+      scoreElement.textContent = String(score);
+      bestElement.textContent = String(bestScore);
+      const labels = {
+        ready: ['Pronto para jogar', 'Pegue as frutinhas e tente não bater na própria cauda.'],
+        playing: ['Em jogo', 'Boa partida. Continue de olho no caminho!'],
+        paused: ['Jogo pausado', 'Respire um pouco. Sua partida está esperando.'],
+        over: ['Fim de jogo', `Você fez ${score} pontos. Mais uma partida?`]
+      };
+      statusElement.textContent = labels[status][0];
+      messageElement.textContent = labels[status][1];
+      nameInput.disabled = status === 'playing' || status === 'paused';
+      startButton.innerHTML = status === 'playing'
+        ? '<span aria-hidden="true">↻</span> Nova partida'
+        : status === 'paused'
+          ? '<span aria-hidden="true">▶</span> Continuar'
+          : status === 'over'
+            ? '<span aria-hidden="true">↻</span> Jogar de novo'
+            : '<span aria-hidden="true">▶</span> Começar partida';
+      pauseButton.disabled = status === 'ready' || status === 'over';
+      pauseButton.innerHTML = status === 'paused'
+        ? '<span aria-hidden="true">▶</span> Continuar'
+        : '<span aria-hidden="true">Ⅱ</span> Pausar';
+    }
+
+    function renderLeaderboard() {
+      leaderboardElement.replaceChildren();
+      if (leaderboard.length === 0) {
+        const emptyState = document.createElement('li');
+        emptyState.className = 'leaderboard-empty';
+        emptyState.textContent = 'Ainda não há pontuações. Seja a primeira pessoa no placar!';
+        leaderboardElement.append(emptyState);
+        return;
+      }
+
+      leaderboard.forEach((entry, index) => {
+        const row = document.createElement('li');
+        const rank = document.createElement('span');
+        const name = document.createElement('span');
+        const points = document.createElement('strong');
+        rank.className = 'leaderboard-rank';
+        rank.textContent = String(index + 1).padStart(2, '0');
+        name.className = 'leaderboard-name';
+        name.textContent = entry.name;
+        points.className = 'leaderboard-score';
+        points.textContent = `${entry.score} pts`;
+        row.append(rank, name, points);
+        leaderboardElement.append(row);
+      });
+    }
+
+    function savePlayerName() {
+      const cleanedName = nameInput.value.trim().replace(/\s+/g, ' ').slice(0, 16);
+      nameInput.setCustomValidity(cleanedName ? '' : 'Digite seu nome para começar a partida.');
+      if (!cleanedName) {
+        nameInput.reportValidity();
+        nameInput.focus();
+        return false;
+      }
+
+      playerName = cleanedName;
+      nameInput.value = cleanedName;
+      try {
+        localStorage.setItem(PLAYER_NAME_KEY, playerName);
+      } catch {
+      }
+      return true;
+    }
+
+    function recordScore() {
+      if (!playerName || score <= 0) return;
+      const normalizedName = playerName.toLocaleLowerCase('pt-BR');
+      const previousEntry = leaderboard.find((entry) => entry.name.toLocaleLowerCase('pt-BR') === normalizedName);
+      const personalBest = Math.max(score, previousEntry ? previousEntry.score : 0);
+      leaderboard = leaderboard.filter((entry) => entry.name.toLocaleLowerCase('pt-BR') !== normalizedName);
+      leaderboard.push({ name: playerName, score: personalBest });
+      leaderboard.sort((first, second) => second.score - first.score || first.name.localeCompare(second.name, 'pt-BR'));
+      leaderboard = leaderboard.slice(0, 10);
+      try {
+        localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(leaderboard));
+      } catch {
+      }
+      renderLeaderboard();
+    }
+
+    function setStatus(nextStatus) {
+      status = nextStatus;
+      updateInterface();
+    }
+
+    function turn(x, y) {
+      if (status === 'over') return;
+      if (status === 'ready' && !savePlayerName()) return;
+      if (x === -nextDirection.x && y === -nextDirection.y) return;
+      nextDirection = { x, y };
+      if (status === 'ready') setStatus('playing');
+    }
+
+    function placeFood() {
+      do {
+        food = { x: Math.floor(Math.random() * GRID_SIZE), y: Math.floor(Math.random() * GRID_SIZE) };
+      } while (snake.some((part) => part.x === food.x && part.y === food.y));
+    }
+
+    function resetGame() {
+      score = 0;
+      direction = { x: 1, y: 0 };
+      nextDirection = { x: 1, y: 0 };
+      snake = [{ x: 9, y: 10 }, { x: 8, y: 10 }, { x: 7, y: 10 }];
+      moveTimer = 0;
+      placeFood();
+      setStatus('ready');
+    }
+
+    function startGame() {
+      if (!savePlayerName()) return;
+      if (status === 'playing' || status === 'over') resetGame();
+      setStatus('playing');
+    }
+
+    function togglePause() {
+      if (status === 'playing') setStatus('paused');
+      else if (status === 'paused') setStatus('playing');
+    }
+
+    function advanceSnake() {
+      direction = nextDirection;
+      const head = { x: snake[0].x + direction.x, y: snake[0].y + direction.y };
+      const ateFood = head.x === food.x && head.y === food.y;
+      const occupied = ateFood ? snake : snake.slice(0, -1);
+      const hitWall = head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_SIZE;
+      const hitSnake = occupied.some((part) => part.x === head.x && part.y === head.y);
+
+      if (hitWall || hitSnake) {
+        recordScore();
+        setStatus('over');
+        return;
+      }
+
+      snake.unshift(head);
+      if (ateFood) {
+        score += 10;
+        if (score > bestScore) {
+          bestScore = score;
+          try {
+            localStorage.setItem(BEST_KEY, String(bestScore));
+          } catch {
+          }
+        }
+        placeFood();
+      } else {
+        snake.pop();
+      }
+      updateInterface();
+    }
+
+    class SnakeScene extends Phaser.Scene {
+      constructor() {
+        super('snake');
+      }
+
+      create() {
+        this.graphics = this.add.graphics();
+        this.notice = this.add.text(BOARD_SIZE / 2, BOARD_SIZE / 2, '', {
+          fontFamily: 'Manrope, sans-serif',
+          fontSize: '21px',
+          fontStyle: '600',
+          color: '#fffefa',
+          align: 'center',
+          lineSpacing: 8
+        }).setOrigin(0.5).setDepth(2);
+
+        this.input.keyboard.on('keydown', (event) => {
+          if (event.target === nameInput) return;
+          const key = event.key.toLowerCase();
+          const directions = {
+            arrowup: [0, -1], w: [0, -1],
+            arrowdown: [0, 1], s: [0, 1],
+            arrowleft: [-1, 0], a: [-1, 0],
+            arrowright: [1, 0], d: [1, 0]
+          };
+          if (directions[key]) {
+            event.preventDefault();
+            turn(...directions[key]);
+          } else if (key === ' ' || key === 'escape') {
+            event.preventDefault();
+            togglePause();
+          } else if (key === 'enter' && (status === 'ready' || status === 'over')) {
+            startGame();
+          }
+        });
+
+        this.input.on('pointerdown', (pointer) => {
+          swipeStart = { x: pointer.x, y: pointer.y };
+        });
+        this.input.on('pointerup', (pointer) => {
+          if (!swipeStart) return;
+          const deltaX = pointer.x - swipeStart.x;
+          const deltaY = pointer.y - swipeStart.y;
+          swipeStart = null;
+          if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < 18) return;
+          if (Math.abs(deltaX) > Math.abs(deltaY)) turn(Math.sign(deltaX), 0);
+          else turn(0, Math.sign(deltaY));
+        });
+      }
+
+      update(time, delta) {
+        if (status === 'playing') {
+          moveTimer += delta;
+          const stepDuration = Math.max(82, 142 - Math.floor(score / 40) * 5);
+          while (moveTimer >= stepDuration && status === 'playing') {
+            moveTimer -= stepDuration;
+            advanceSnake();
+          }
+        }
+
+        this.drawBoard(time);
+      }
+
+      drawBoard(time) {
+        const graphics = this.graphics;
+        graphics.clear();
+        graphics.fillStyle(0x192823, 1);
+        graphics.fillRect(0, 0, BOARD_SIZE, BOARD_SIZE);
+        graphics.lineStyle(1, 0xffffff, 0.055);
+        for (let line = 0; line <= GRID_SIZE; line += 1) {
+          const position = line * CELL_SIZE;
+          graphics.lineBetween(position, 0, position, BOARD_SIZE);
+          graphics.lineBetween(0, position, BOARD_SIZE, position);
+        }
+
+        const pulse = 1 + Math.sin(time / 170) * 0.08;
+        const foodCenterX = food.x * CELL_SIZE + CELL_SIZE / 2;
+        const foodCenterY = food.y * CELL_SIZE + CELL_SIZE / 2;
+        graphics.fillStyle(0xf27850, 0.18);
+        graphics.fillCircle(foodCenterX, foodCenterY, 11 * pulse);
+        graphics.fillStyle(0xf27850, 1);
+        graphics.fillCircle(foodCenterX, foodCenterY, 6.5 * pulse);
+
+        snake.forEach((part, index) => {
+          const inset = index === 0 ? 3 : 4;
+          const x = part.x * CELL_SIZE + inset;
+          const y = part.y * CELL_SIZE + inset;
+          graphics.fillStyle(index === 0 ? 0xefffae : 0xc9ed72, 1);
+          graphics.fillRoundedRect(x, y, CELL_SIZE - inset * 2, CELL_SIZE - inset * 2, index === 0 ? 8 : 5);
+        });
+
+        const notices = {
+          ready: 'Pronto?\\nPegue a primeira frutinha.',
+          paused: 'Partida pausada',
+          over: 'Fim de jogo'
+        };
+        const shouldShowNotice = status !== 'playing';
+        this.notice.setVisible(shouldShowNotice);
+        if (shouldShowNotice) {
+          this.notice.setText(notices[status]);
+          graphics.fillStyle(0x101914, 0.73);
+          graphics.fillRect(0, 0, BOARD_SIZE, BOARD_SIZE);
+          this.notice.setDepth(2);
+        }
+      }
+    }
+
+    updateInterface();
+    renderLeaderboard();
+
+    function applyTheme(theme) {
+      const isDark = theme === 'dark';
+      document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+      themeToggle.setAttribute('aria-pressed', String(isDark));
+      themeToggle.setAttribute('aria-label', isDark ? 'Ativar tema claro' : 'Ativar tema escuro');
+      document.querySelector('meta[name="theme-color"]').content = isDark ? '#141c17' : '#f5f4ed';
+    }
+
+    applyTheme(document.documentElement.dataset.theme);
+    themeToggle.addEventListener('click', () => {
+      const nextTheme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+      applyTheme(nextTheme);
+      try {
+        localStorage.setItem('mare-theme', nextTheme);
+      } catch {
+      }
+    });
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'mare-theme') applyTheme(event.newValue === 'dark' ? 'dark' : 'light');
+    });
+
+    const game = new Phaser.Game({
+      type: Phaser.AUTO,
+      parent: 'game-board',
+      width: BOARD_SIZE,
+      height: BOARD_SIZE,
+      backgroundColor: '#192823',
+      render: { antialias: true },
+      scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
+      scene: SnakeScene
+    });
+
+    startButton.addEventListener('click', startGame);
+    pauseButton.addEventListener('click', togglePause);
+    document.querySelectorAll('[data-dir]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const directions = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+        turn(...directions[button.dataset.dir]);
+      });
+    });
+  </script>
+</body>
+</html>
